@@ -15,6 +15,8 @@ import sys
 from datetime import datetime
 import calendar
 import os
+import pickle
+import requests.utils
 from requests_toolbelt import MultipartEncoder
 
 # Turn off InsecureRequestWarning
@@ -66,6 +68,19 @@ class InstagramAPI:
         self.isLoggedIn = False
         self.LastResponse = None
         self.s = requests.Session()
+
+    def saveSession(self, file_path):
+        with open(file_path, 'wb') as f:
+            pickle.dump(requests.utils.dict_from_cookiejar(self.s.cookies), f)
+
+    def loadSession(self, file_path):
+        with open(file_path, 'rb') as f:
+            cookies = requests.utils.cookiejar_from_dict(pickle.load(f))
+            self.s.cookies = cookies
+            self.isLoggedIn = True
+            self.username_id = self.s.cookies.get('ds_user_id')
+            self.rank_token = "%s_%s" % (self.username_id, self.uuid)
+            self.token = self.s.cookies.get("csrftoken")
 
     def setUser(self, username, password):
         self.username = username
